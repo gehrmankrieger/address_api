@@ -1,0 +1,786 @@
+{
+  "info": {
+    "name": "Address API",
+    "description": "End-to-end checks for the Address API. Start the server first, then run the whole collection in order (Runner or Newman). It creates its own data and deletes it at the end.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health check",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Reports ok\", () => pm.expect(pm.response.json().status).to.eql(\"ok\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Create address (Makati)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test(\"Returns an id\", () => pm.expect(body.id).to.be.a(\"number\"));",
+              "pm.test(\"Trims whitespace in label\", () => pm.expect(body.label).to.eql(\"Office\"));",
+              "pm.test(\"Has timestamps\", () => { pm.expect(body.created_at).to.be.a(\"string\"); pm.expect(body.updated_at).to.be.a(\"string\"); });",
+              "pm.collectionVariables.set(\"addressId\", body.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"label\": \"  Office  \",\n  \"street\": \"Ayala Ave\",\n  \"city\": \"Makati\",\n  \"postal_code\": \"1226\",\n  \"country\": \"Philippines\",\n  \"latitude\": 14.5547,\n  \"longitude\": 121.0244\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create address (Cebu, ~570 km away)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"farAddressId\", pm.response.json().id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"street\": \"Osmeña Blvd\",\n  \"city\": \"Cebu City\",\n  \"country\": \"Philippines\",\n  \"latitude\": 10.3157,\n  \"longitude\": 123.8854\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create rejects latitude > 90",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"street\": \"Ayala Ave\",\n  \"city\": \"Makati\",\n  \"postal_code\": \"1226\",\n  \"country\": \"Philippines\",\n  \"latitude\": 91,\n  \"longitude\": 121.0244\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create rejects longitude < -180",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"street\": \"Ayala Ave\",\n  \"city\": \"Makati\",\n  \"postal_code\": \"1226\",\n  \"country\": \"Philippines\",\n  \"latitude\": 14.5547,\n  \"longitude\": -181\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create rejects blank city",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"street\": \"Ayala Ave\",\n  \"city\": \"   \",\n  \"postal_code\": \"1226\",\n  \"country\": \"Philippines\",\n  \"latitude\": 14.5547,\n  \"longitude\": 121.0244\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Create rejects missing street",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": \"Makati\",\n  \"postal_code\": \"1226\",\n  \"country\": \"Philippines\",\n  \"latitude\": 14.5547,\n  \"longitude\": 121.0244\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Get address",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Is the created address\", () => pm.expect(pm.response.json().city).to.eql(\"Makati\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "List addresses",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Returns a list\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses?skip=0&limit=50",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses"
+          ],
+          "query": [
+            {
+              "key": "skip",
+              "value": "0"
+            },
+            {
+              "key": "limit",
+              "value": "50"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Nearby: 10 km around Rizal Park",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const results = pm.response.json();",
+              "const ids = results.map(a => a.id);",
+              "pm.test(\"Includes Makati (~5.8 km)\", () => pm.expect(ids).to.include(Number(pm.collectionVariables.get(\"addressId\"))));",
+              "pm.test(\"Excludes Cebu (~570 km)\", () => pm.expect(ids).to.not.include(Number(pm.collectionVariables.get(\"farAddressId\"))));",
+              "pm.test(\"Every result is within 10 km\", () => results.forEach(a => pm.expect(a.distance_km).to.be.at.most(10)));",
+              "pm.test(\"Sorted nearest first\", () => { for (let i = 1; i < results.length; i++) pm.expect(results[i].distance_km).to.be.at.least(results[i - 1].distance_km); });"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/nearby?latitude=14.5831&longitude=120.9794&distance_km=10",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "nearby"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "14.5831"
+            },
+            {
+              "key": "longitude",
+              "value": "120.9794"
+            },
+            {
+              "key": "distance_km",
+              "value": "10"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Nearby: 1 km returns nothing",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Makati not within 1 km\", () => pm.expect(pm.response.json().map(a => a.id)).to.not.include(Number(pm.collectionVariables.get(\"addressId\"))));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/nearby?latitude=14.5831&longitude=120.9794&distance_km=1",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "nearby"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "14.5831"
+            },
+            {
+              "key": "longitude",
+              "value": "120.9794"
+            },
+            {
+              "key": "distance_km",
+              "value": "1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Nearby rejects distance_km = 0",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/nearby?latitude=14.5831&longitude=120.9794&distance_km=0",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "nearby"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "14.5831"
+            },
+            {
+              "key": "longitude",
+              "value": "120.9794"
+            },
+            {
+              "key": "distance_km",
+              "value": "0"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Update: partial (city only)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test(\"City changed\", () => pm.expect(body.city).to.eql(\"Taguig\"));",
+              "pm.test(\"Other fields untouched\", () => pm.expect(body.street).to.eql(\"Ayala Ave\"));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": \"Taguig\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Update rejects null on required field",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": null\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Update rejects empty body",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 422\", () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Update unknown id returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/999999",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "999999"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"city\": \"X\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Delete address",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Get deleted address returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Delete again returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{addressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{addressId}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Cleanup: delete Cebu address",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/addresses/{{farAddressId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "addresses",
+            "{{farAddressId}}"
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "addressId",
+      "value": ""
+    },
+    {
+      "key": "farAddressId",
+      "value": ""
+    }
+  ]
+}
