@@ -59,9 +59,9 @@ def delete_address(db: Session, address: Address) -> None:
 
 
 def find_nearby(db: Session, latitude: float, longitude: float, distance_km: float) -> list[tuple[Address, float]]:
-    """ Get nearby addresses. """
+    """ Get nearby Addresses. """
 
-    nearby_results: list[Tuple[Address, float]] = []
+    nearby_results: list[tuple[Address, float]] = []
     box = geo.bounding_box(latitude, longitude, distance_km)
     query = (select(Address)
         .where(
