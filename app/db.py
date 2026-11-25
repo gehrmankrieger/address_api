@@ -15,7 +15,7 @@ engine = create_engine(settings.database_url, connect_args=_connect_args)
 SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False)
 
 class Base(DeclarativeBase):
-    """  """
+    """ Base class for ORM models to inherit from. """
 
 def get_db() -> Iterator[Session]:
     """ 1 session per request, close after. """
@@ -25,4 +25,4 @@ def get_db() -> Iterator[Session]:
 def init_db() -> None:
     from app import models # noqa: F401
     Base.metadata.create_all(bind=engine)
-    
+
