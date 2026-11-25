@@ -19,9 +19,9 @@ AddressId = Annotated[int, Path(gt=0, description="Address id.")]
 def _get_or_404(db: Session, address_id: int) -> Address:
     """ Get ID or return 'Not Found' code error. """
     
-    address = repository.get_address(address_id)
+    address = repository.get_address(db, address_id)
     if address is None:
-        logger.warning("Address ID not found.")
+        logger.warning("Address id=%s not found", address_id)
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Address {address_id} not found. ")
 
     return address
@@ -60,12 +60,14 @@ def update_address(db: DbSession, address_id: AddressId, payload: AddressUpdate)
 
     result = _get_or_404(db, address_id)
 
-    return repository.update_address(db, result)
+    return repository.update_address(db, result, payload)
 
 @router.delete("/{address_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_address(db: DbSession, address_id: AddressId) -> Response:
     """ Endpoint/function for 'DELETE' method with ID."""
 
     result = _get_or_404(db, address_id)
+
+    repository.delete_address(db, result)
 
     return Response(status_code=status.HTTP_204_NO_CONTENT)

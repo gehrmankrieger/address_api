@@ -75,8 +75,8 @@ def find_nearby(db: Session, latitude: float, longitude: float, distance_km: flo
         distance = geo.haversine_km(latitude, longitude, result.latitude, result.longitude)
         if distance <= distance_km:
             nearby_results.append((result, distance))
-    results.sort(key=lambda pair: pair[1])
+    nearby_results.sort(key=lambda pair: pair[1])
 
     logger.debug("Nearby search (%s, %s, %skm): %d results.", latitude, longitude, distance_km, len(results))
 
-    return results
+    return nearby_results
